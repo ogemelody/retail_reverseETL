@@ -1,66 +1,74 @@
-# RetailLoop
-Customer intelligence & ad-activation platform for multi-location retail 
-built to demonstrate end-to-end data engineering: 
-multi-source ingestion, orchestration,
-medallion-architecture transformation,
-CI/CD for schema change, and reverse ETL activation.
- 
----
-## The challenge
- 
-A multi-location retail chain has its data trapped in
-disconnected systems: GA4 knows what people browse, 
-Shopify knows who buys, Klaviyo knows who engages with email,
-and Google/Meta Ads know what's spent,but none of it is joined. 
-The result: marketing spends the same acquisition budget on existing
-loyal customers as on genuinely new prospects, nobody can say which 
-store or channel drives long-term value, and upstream schema changes
-(a new GA4 dimension, a renamed Shopify field) silently break downstream
-dashboards.
- 
-## Proposed Solution
- 
-1. **Ingests** GA4, Shopify, Klaviyo, and ad-spend data through both scheduled Airflow DAGs and real-time FastAPI webhooks.
-2. **Transforms** it through dbt's medallion architecture (bronze → silver → gold) into a unified customer, location, and marketing-attribution model in Snowflake.
-3. **Enforces schema-change safety** through a GitHub Actions CI/CD pipeline with slim CI and automated drift detection.
-4. **Closes the loop** with reverse ETL — pushing gold-layer audience segments (high-LTV, lapsed, cart-abandoners) directly back into Google Ads and Meta Custom Audiences.
-5. Runs on infrastructure fully defined in Terraform, with autoscaling, least-privilege IAM, and cost guardrails built in from the start.
+# Retail Customer Intelligence & Ad Activation
 
+**Connect retail data, understand customers, and turn insights into relevant marketing audiences.**
 
-## Data sources
- 
-- **GA4** — `bigquery-public-data.ga4_obfuscated_sample_ecommerce` (public sample export)
-- **Shopify** — Partners development store, seeded with 12 months of realistic order data
-- **Klaviyo** — free-tier account for email engagement events
-- **Google Ads / Meta Ads** — developer sandbox accounts for spend data and audience activation
+This project brings together website activity, purchases, email engagement and advertising spend for a multi-location retailer. It turns disconnected records into a curated warehouse dataset, then uses **reverse ETL** to send selected customer audiences to marketing platforms.
 
+> **Status:** Architecture and build blueprint. This package contains documentation and diagrams. Pipeline code and deployed infrastructure are not included yet.
 
-## Tools
- 
-| Layer | Tool |
-|---|---|
-| Ingestion / orchestration | Apache Airflow (Cloud Composer 2) |
-| Event-driven ingestion & activation | FastAPI, Docker, Cloud Run |
-| Landing / bronze | BigQuery (GA4 native export), Snowflake |
-| Transformation | dbt Core |
-| Warehouse (silver/gold) | Snowflake |
-| CI/CD | GitHub Actions, dbt slim CI, Elementary |
-| Reverse ETL | Custom FastAPI services + Google Ads / Meta Marketing APIs |
-| Infrastructure as code | Terraform (GCP + Snowflake providers) |
-| Observability | Elementary, OpenLineage, Snowflake resource monitors |
- 
+## Why build this?
 
-## Project phases
- 
+Retail data often lives in separate systems: GA4 captures browsing, Shopify records purchases, Klaviyo tracks email engagement, and advertising platforms report campaign spend. Without joining that information, teams struggle to identify valuable customers, compare store performance or avoid spending acquisition budgets on existing loyal buyers.
 
-| Phase | Focus                                                      |
-|---|------------------------------------------------------------|
-| 0 | Environment & IaC (Terraform)                              |
-| 1 | Data source setup (Shopify, Klaviyo, Google/Meta Ads, GA4) |
-| 2 | Batch ingestion (Airflow)                                  |
-| 2.5 | Event-driven ingestion & activation (FastAPI + Docker)     |
-| 3 | Transformation (dbt bronze → silver → gold)                |
-| 4 | CI/CD & schema-change safety                               |
-| 5 | Reverse ETL activation                                     |
-| 6 | Observability                                              |
-| 7 | Documentation                                              |
+This project demonstrates how data engineering can connect those systems and support better marketing decisions. It is also a practical learning project for ingestion, data modeling, testing, orchestration and cloud infrastructure.
+
+## How it works
+
+![Curated warehouse data flowing through reverse ETL to marketing channels and ad networks](asset/reverse-etl.png)
+
+1. **Ingest:** Collect source data through scheduled jobs and supported webhooks.
+2. **Organize:** Preserve raw records in bronze, clean and join them in silver, and publish business-ready datasets in gold.
+3. **Validate:** Test data quality and detect schema changes before affected data reaches reporting or activation.
+4. **Activate:** Sync eligible audience members to marketing destinations using reverse ETL.
+5. **Monitor:** Track freshness, failures, audience changes and operating costs.
+
+Reverse ETL moves selected data **out of the warehouse into business tools**. Campaign engagement and performance return to the warehouse through ingestion.
+
+## What is in the curated dataset?
+
+The gold layer provides a consistent view of customers and their activity:
+
+| Dataset | What it contains |
+| --- | --- |
+| Customer 360 | Customer IDs, consent, order count and historical customer value |
+| Purchase history | Orders, products, refunds and last purchase date |
+| Location insights | Store performance and preferred customer locations |
+| Engagement | Identifiable browsing, cart and email activity |
+| Audience membership | Customers eligible for each marketing segment |
+
+For example, a customer with no purchase in 90 days could enter a **lapsed-customer audience**. Reverse ETL adds eligible members to a win-back audience. After another purchase, the customer leaves that segment and the next sync removes their membership.
+
+Other example segments include high-value customers and cart abandoners. Segment definitions and consent checks should match the intended destination.
+
+## Suggested tools
+
+Choose one compatible option for each role; you do not need every tool listed.
+
+| Stage | Reference tool | Alternatives |
+| --- | --- | --- |
+| Orchestration | Airflow | Dagster, Prefect |
+| Batch ingestion | Python API jobs | Airbyte, Fivetran |
+| Webhook ingestion | FastAPI | NestJS |
+| Warehouse | Snowflake | BigQuery, Databricks SQL, Redshift |
+| Transformation | dbt Core | SQLMesh |
+| CI/CD | GitHub Actions | GitLab CI, Azure Pipelines |
+| Data quality | dbt tests + Elementary | Great Expectations, Soda |
+| Reverse ETL | Custom API service | Hightouch, supported Airbyte activation connectors |
+| Infrastructure | Terraform | OpenTofu, Pulumi |
+| Service hosting | Docker + Cloud Run | Containers on ECS Fargate |
+
+The initial activation targets are **Google Ads and Meta Ads**. Email/SMS activation through Klaviyo is an optional extension.
+
+![View the full architecture and tool diagram](asset/architecture.png)
+
+## Build your own
+
+Start with one source and a local audience export before adding the full platform.
+
+1. **Prepare your environment.** Create a Git repository, choose a warehouse, configure development credentials and set cost limits.
+2. **Create demo data.** Use synthetic customers, orders and store records with consistent identifiers. Add GA4 and engagement data when ready.
+3. **Build ingestion.** Load records into bronze. Add pagination, retries and checkpoints so reruns do not duplicate business records.
+4. **Build models.** Create silver customer and order tables, then gold customer profiles and audience segments. Test keys, relationships and totals.
+5. **Protect changes.** Add CI checks and source-schema validation. Confirm that a deliberately renamed field produces a visible failure.
+6. **Add activation.** Export an audience to a file or mock destination first. Then implement supported API syncs, including membership removals and retries.
+7. **Demonstrate reliability.** Replay a failed job, handle a duplicate event, remove an ineligible customer and inspect monitoring results.
