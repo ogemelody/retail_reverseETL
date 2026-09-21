@@ -13,6 +13,8 @@ Retail data often lives in separate systems: GA4 captures browsing, Shopify reco
 This project demonstrates how data engineering can connect those systems and support better marketing decisions. It is also a practical learning project for ingestion, data modeling, testing, orchestration and cloud infrastructure.
 
 ## How it works
+![img.png](img.png)
+The Reverse- ETL
 
 ![Curated warehouse data flowing through reverse ETL to marketing channels and ad networks](asset/reverse-etl.png)
 
