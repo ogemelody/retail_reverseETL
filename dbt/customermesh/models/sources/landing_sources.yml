@@ -1,0 +1,32 @@
+version: 2
+
+sources:
+  - name: landing
+    database: CUSTOMERMESH_DB
+    schema: LANDING
+
+
+    tables:
+      - name: behavioral_events
+        identifier: BEHAVIORAL_EVENTS
+
+      - name: crm_contacts
+        identifier: CRM_CONTACTS
+
+      - name: ecommerce_customers
+        identifier: ECOMMERCE_CUSTOMERS
+
+      - name: ecommerce_orders
+        identifier: ECOMMERCE_ORDERS
+
+      - name: ecommerce_order_items
+        identifier: ECOMMERCE_ORDER_ITEMS
+
+      - name: ecommerce_refunds
+        identifier: ECOMMERCE_REFUNDS
+
+      - name: pos_transactions
+        identifier: POS_TRANSACTIONS
+
+      - name: pos_returns
+        identifier: POS_RETURNS
