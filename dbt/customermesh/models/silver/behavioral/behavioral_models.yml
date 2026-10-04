@@ -1,0 +1,92 @@
+version: 2
+
+models:
+  - name: stg_behavioral_events
+    description: >
+      Staged behavioral event records parsed and typed from the
+      CUSTOMERMESH_DB.LANDING.BEHAVIORAL_EVENTS source.
+
+    columns:
+
+      - name: source_record_id
+        description: Identifier assigned to the record by the behavioral source.
+        data_tests:
+          - not_null
+
+      - name: source_system
+        description: Source system that produced the record.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['behavioral']
+
+      - name: source_entity
+        description: Source entity represented by the record.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['events']
+
+      - name: anonymous_id
+        description: Anonymous identifier associated with the behavioral event.
+
+      - name: user_id
+        description: Identified user ID when the anonymous user has been identified.
+
+      - name: event_type
+        description: Type of behavioral event recorded.
+        data_tests:
+          - not_null
+
+      - name: product_id
+        description: Product associated with the event when applicable.
+
+      - name: operation
+        description: Change operation associated with the source record.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['insert', 'update', 'delete']
+
+      - name: business_event_timestamp
+        description: Timestamp when the customer event actually occurred.
+        data_tests:
+          - not_null
+
+      - name: ingestion_timestamp
+        description: Timestamp when the event entered the ingestion process.
+        data_tests:
+          - not_null
+
+      - name: late_arrival
+        description: Indicates whether the record arrived later than expected.
+        data_tests:
+          - not_null
+
+      - name: batch_id
+        description: Batch responsible for delivering the record.
+        data_tests:
+          - not_null
+
+      - name: schema_version
+        description: Version of the behavioral event source schema.
+        data_tests:
+          - not_null
+
+      - name: source_file
+        description: GCS object from which Snowflake loaded the record.
+        data_tests:
+          - not_null
+
+      - name: source_file_row
+        description: Row number of the record within the source JSONL file.
+        data_tests:
+          - not_null
+
+      - name: warehouse_loaded_at
+        description: Timestamp when Snowflake loaded the record into LANDING.
+        data_tests:
+          - not_null
