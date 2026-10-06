@@ -17,7 +17,12 @@ renamed as (
         raw_record:payload:email_hash::varchar as email_hash,
         raw_record:payload:first_name::varchar as first_name,
         raw_record:payload:last_name::varchar as last_name,
+        raw_record:payload:loyalty_id::varchar as loyalty_id,
+        raw_record:payload:logical_version::varchar as logical_version,
         raw_record:payload:phone_hash::varchar as phone_hash,
+        raw_record:payload:previous_consent_status::varchar as previous_consent_status,
+        raw_record:payload:delivery_instance::integer as delivery_instance,
+        raw_record:payload:tombstone::boolean as tombstone,
 
         raw_record:schema_version::varchar as schema_version,
         raw_record:source_entity::varchar as source_entity,

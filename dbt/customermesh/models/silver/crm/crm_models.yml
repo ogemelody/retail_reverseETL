@@ -92,6 +92,8 @@ models:
                 values: ['insert', 'update']
       - name: consent_status
         description: Current CRM consent status, including withdrawn state.
+      - name: loyalty_id
+        description: CRM loyalty identifier used as a source-native bridge to POS activity when present.
       - name: source_updated_at
         description: Source timestamp used for current-state version ordering.
         data_tests:

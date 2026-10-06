@@ -50,6 +50,7 @@ select
     first_name,
     ingestion_timestamp,
     late_arrival,
+    loyalty_id,
     last_name,
     logical_source_version_key,
     logical_version,
