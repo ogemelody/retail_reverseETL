@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime
 from itertools import groupby
+import json
 
 from ..anomalies import inject_anomalies
 from ..canonical.world import build_world
@@ -11,7 +12,7 @@ from ..changes.late_arrivals import mark_late
 from ..changes.schema_evolution import schema_for, transition_records
 from ..identity import apply_identity_evidence
 from ..projections import project_all, project_successor_changes
-from ..validation.report import validate_records
+from ..validation.report import validate_final_serialized_output
 from .jsonl import stream_jsonl_parts
 from .manifests import batch_manifest, run_manifest
 from ..landing.protocol import control_name, object_name
@@ -92,7 +93,7 @@ def _batch_records(world, projected, grouped, sequence, ingestion, previous_ids,
         if candidate:
             records.append(replace(candidate, batch_id="batch_002", ingestion_timestamp=ingestion, source_updated_at=ingestion, operation="update", schema_version="ecommerce.customers.v1", payload={**candidate.payload, "city": "Berlin"}))
     if sequence >= 4:
-        records.extend(project_successor_changes(world.successor(sequence), f"batch_{sequence + 1:03d}", ingestion, sequence))
+        records.extend(project_successor_changes(world.successor(sequence), f"batch_{sequence + 1:03d}", ingestion, sequence, config.seed))
     records = annotate_operations(records, previous_ids)
     records = mark_late(records, ingestion)
     records = list(apply_identity_evidence(records))
@@ -130,20 +131,32 @@ def generate_to_gcs(config, landing, *, continue_run: bool = False, new_batches:
         batch_results = []
         object_namespace = "run_scoped"
     previous_ids: set[str] = set()
+    previous_records = []
     for sequence in range(start_sequence):
         ingestion = config.ingestion_time(sequence).isoformat().replace("+00:00", "Z")
-        previous_ids.update(r.source_record_id for r in _batch_records(world, projected, grouped, sequence, ingestion, previous_ids, config))
+        historical_batch = _batch_records(world, projected, grouped, sequence, ingestion, previous_ids, config)
+        previous_records.extend(historical_batch)
+        previous_ids.update(r.source_record_id for r in historical_batch)
     for sequence in range(start_sequence, start_sequence + requested_batches):
         batch_id = f"batch_{sequence + 1:03d}"
         ingestion = config.ingestion_time(sequence).isoformat().replace("+00:00", "Z")
         records = _batch_records(world, projected, grouped, sequence, ingestion, previous_ids, config)
-        report = validate_records(records)
         objects = []
+        serialized_entities = []
+        pending_uploads = []
         for (source_system, entity), entity_records in groupby(sorted(records, key=lambda item: (item.source_system, item.source_entity)), key=lambda item: (item.source_system, item.source_entity)):
-            for part, (text, count) in enumerate(stream_jsonl_parts(list(entity_records), config.part_records)):
+            entity_records = list(entity_records)
+            parts = list(stream_jsonl_parts(entity_records, config.part_records))
+            serialized_entities.extend(json.loads(line) for text, _ in parts for line in text.splitlines())
+            for part, (text, count) in enumerate(parts):
                 name = object_name(config.prefix, source_system, entity, ingestion, batch_id, part, config.run_id if object_namespace == "run_scoped" else None)
-                result = landing.put_text(name, text, count)
-                objects.append(result.__dict__)
+                pending_uploads.append((name, text, count))
+        report = validate_final_serialized_output(serialized_entities, previous_records, require_controlled_scenarios=sequence >= 6)
+        if report.errors:
+            raise ValueError(f"Final serialized validation failed for {batch_id}: {report.as_dict()}")
+        for name, text, count in pending_uploads:
+            result = landing.put_text(name, text, count)
+            objects.append(result.__dict__)
         validation_name = control_name(config.prefix, "validation", f"run_id={config.run_id}/batch_id={batch_id}")
         validation_result = landing.put_json(validation_name, report.as_dict())
         objects.append(validation_result.__dict__)
@@ -156,6 +169,7 @@ def generate_to_gcs(config, landing, *, continue_run: bool = False, new_batches:
         manifest_result = landing.put_json(manifest_name, manifest)
         batch_results.append({"manifest": manifest_result.__dict__, "batch_id": batch_id, "batch_sequence": sequence, "ingestion_timestamp": ingestion, "record_count": len(records)})
         previous_ids.update(r.source_record_id for r in records)
+        previous_records.extend(records)
     run = run_manifest(config.run_id, config.seed, _configuration(config), batch_results, object_namespace=object_namespace)
     landing.put_json(run_name, run, overwrite=existing_run is not None)
     return run

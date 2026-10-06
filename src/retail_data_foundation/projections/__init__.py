@@ -2,7 +2,7 @@ from collections.abc import Iterable
 
 from ..canonical.entities import CanonicalWorld, SourceObservation
 from .behavioral import project_behavioral
-from .crm import project_crm, project_crm_successor
+from .crm import project_crm, project_crm_controlled_scenarios, project_crm_successor
 from .ecommerce import project_ecommerce
 from .pos import project_pos
 
@@ -14,9 +14,10 @@ def project_all(world: CanonicalWorld, batch_id: str, ingestion_timestamp: str) 
     yield from project_crm(world, batch_id, ingestion_timestamp)
 
 
-def project_successor_changes(world: CanonicalWorld, batch_id: str, ingestion_timestamp: str, sequence: int) -> Iterable[SourceObservation]:
+def project_successor_changes(world: CanonicalWorld, batch_id: str, ingestion_timestamp: str, sequence: int, seed: int = 7) -> Iterable[SourceObservation]:
     """Project deterministic source changes from a canonical successor state."""
     yield from project_crm_successor(world, batch_id, ingestion_timestamp, sequence)
+    yield from project_crm_controlled_scenarios(world, batch_id, ingestion_timestamp, sequence, seed)
 
 
 __all__ = ["project_all", "project_successor_changes"]
