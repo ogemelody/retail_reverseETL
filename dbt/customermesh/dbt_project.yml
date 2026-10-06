@@ -1,0 +1,25 @@
+#Project identity
+name: 'customermesh'
+version: '1.0.0'
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'customermesh'
+
+#These lines tell dbt where different types of resources live
+model-paths: ["models"]  # Sql Transformations
+analysis-paths: ["analyses"]  # sql analysis that dbt can compile but doesn't need to materialise as model
+test-paths: ["tests"]    # custom data quality tests
+seed-paths: ["seeds"]    #
+macro-paths: ["macros"]    # reusable SQL/Jinja logic
+snapshot-paths: ["snapshots"]   # historical/ SCD- style tracking
+
+clean-targets:         # directories to be removed by `dbt clean` . dbt removes generated artifacts
+  - "target"
+  - "dbt_packages"
+
+
+
+
+models:
+  customermesh:
+      +materialized: view  # view, table or incremental
