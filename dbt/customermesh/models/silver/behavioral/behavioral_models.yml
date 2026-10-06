@@ -35,6 +35,9 @@ models:
       - name: user_id
         description: Identified user ID when the anonymous user has been identified.
 
+      - name: ecommerce_customer_id
+        description: Explicit ecommerce account link emitted on authenticated behavioral events when available.
+
       - name: event_type
         description: Type of behavioral event recorded.
         data_tests:

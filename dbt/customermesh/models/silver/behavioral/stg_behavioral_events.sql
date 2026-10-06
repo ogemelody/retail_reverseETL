@@ -14,6 +14,7 @@
 
             raw_record:payload:anonymous_id::varchar as anonymous_id,
             raw_record:payload:event_type::varchar as event_type,
+            raw_record:payload:ecommerce_customer_id::varchar as ecommerce_customer_id,
             raw_record:payload:user_id::varchar as user_id,
             raw_record:payload:product_id::varchar as product_id,
 
