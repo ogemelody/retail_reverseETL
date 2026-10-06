@@ -1,0 +1,102 @@
+version: 2
+
+models:
+  - name: stg_crm_contacts
+    description: >
+      One row per raw CRM delivery loaded from LANDING, with source CDC
+      metadata, delivery lineage, and controlled duplicate fields exposed.
+      This model intentionally preserves repeated deliveries and all source
+      versions.
+    columns:
+      - name: source_record_id
+        description: Stable CRM source contact identifier; not a logical-version key by itself.
+        data_tests:
+          - not_null
+      - name: source_updated_at
+        description: Source-system timestamp identifying the source version ordering.
+        data_tests:
+          - not_null
+      - name: operation
+        description: Source operation for this delivery.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['insert', 'update', 'delete']
+      - name: logical_version
+        description: Optional source-provided logical version; populated for controlled duplicate deliveries.
+      - name: delivery_instance
+        description: Optional physical delivery number for a repeated logical version.
+      - name: source_file
+        description: GCS object lineage for the delivery.
+        data_tests:
+          - not_null
+      - name: source_file_row
+        description: Row lineage within the source JSONL object.
+        data_tests:
+          - not_null
+
+  - name: int_crm_contacts_deduplicated
+    description: >
+      One row per unique logical CRM source version. The logical grain is
+      source_record_id plus logical_version when present, otherwise
+      source_record_id plus source_updated_at and business_event_timestamp.
+      Repeated deliveries are reduced with deterministic delivery-instance,
+      file-name, file-row, and warehouse-load tie-breakers. Legitimate CDC
+      versions, consent changes, deletes, and late arrivals remain.
+    columns:
+      - name: source_record_id
+        description: CRM contact identifier; multiple legitimate source versions may exist in history.
+        data_tests:
+          - not_null
+      - name: logical_source_version_key
+        description: Deduplication key for one logical CRM source version.
+        data_tests:
+          - not_null
+      - name: operation
+        description: Preserved source operation, including delete tombstones.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['insert', 'update', 'delete']
+      - name: source_updated_at
+        description: Primary source-version ordering field retained for current-state selection.
+        data_tests:
+          - not_null
+      - name: batch_id
+        description: Batch that delivered this logical source version.
+        data_tests:
+          - not_null
+
+  - name: crm_contacts_current
+    description: >
+      One current trusted active state per CRM contact. The latest legitimate
+      source version is selected by source_updated_at, then ingestion and
+      lineage tie-breakers. Delete versions are applied by the incremental
+      pre-hook and excluded from the active result. Late arrivals are retained
+      because the incremental lookback uses warehouse load metadata rather than
+      business-event time alone.
+    columns:
+      - name: source_record_id
+        description: Unique active CRM contact identifier.
+        data_tests:
+          - not_null
+          - unique
+      - name: operation
+        description: Operation of the latest active source version.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['insert', 'update']
+      - name: consent_status
+        description: Current CRM consent status, including withdrawn state.
+      - name: source_updated_at
+        description: Source timestamp used for current-state version ordering.
+        data_tests:
+          - not_null
+      - name: late_arrival
+        description: Whether the current source version arrived later than its business event.
+        data_tests:
+          - not_null
