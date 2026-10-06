@@ -4,7 +4,19 @@
 
 This project brings together website activity, purchases, email engagement and advertising spend for a multi-location retailer. It turns disconnected records into a curated warehouse dataset, then uses **reverse ETL** to send selected customer audiences to marketing platforms.
 
-> **Status:** Architecture and build blueprint. This package contains documentation and diagrams. Pipeline code and deployed infrastructure are not included yet.
+> **Status:** Feature 001 implementation in progress. Synthetic source generation lands directly to Google Cloud Storage; downstream warehouse and activation features remain future work.
+
+## Feature 001 quick path
+
+```bash
+python -m pip install -e '.[dev]'
+export GCS_BUCKET=multisource-customer-data-raw
+export GCS_REGION=europe-west3
+export GCS_STORAGE_CLASS=STANDARD
+retail-data generate --config configs/demo.toml --bucket "$GCS_BUCKET"
+```
+
+The bucket is runtime configuration. Generated records use source-native IDs and identity evidence; `canonical_customer_id` never appears in raw GCS records. See `specs/001-synthetic-retail-data-foundation/quickstart.md` for validation details.
 
 ## Why build this?
 
