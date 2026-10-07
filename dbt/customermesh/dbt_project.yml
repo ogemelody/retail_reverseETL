@@ -23,3 +23,9 @@ clean-targets:         # directories to be removed by `dbt clean` . dbt removes 
 models:
   customermesh:
       +materialized: view  # view, table or incremental
+
+      silver:
+        +schema: SILVER
+
+      gold:
+        +schema: GOLD
