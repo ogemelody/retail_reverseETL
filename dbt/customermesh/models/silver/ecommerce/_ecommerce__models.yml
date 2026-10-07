@@ -1,0 +1,262 @@
+version: 2
+
+models:
+  - name: stg_ecommerce_customers
+    description: Typed, source-shaped ecommerce customer observations from LANDING.
+    columns:
+      - name: source_record_id
+        description: Source-native ecommerce customer record identifier.
+        data_tests: [not_null]
+      - name: source_system
+        description: Source system that produced the record.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['ecommerce']}
+      - name: source_entity
+        description: Source entity represented by the record.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['customers']}
+      - name: operation
+        description: Source change operation.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['insert', 'update', 'delete']}
+      - name: business_event_timestamp
+        description: Timestamp associated with the source business event.
+        data_tests: [not_null]
+      - name: source_updated_at
+        description: Timestamp when the source record was updated.
+        data_tests: [not_null]
+      - name: ingestion_timestamp
+        description: Timestamp when the source observation entered ingestion.
+        data_tests: [not_null]
+      - name: late_arrival
+        description: Whether the observation arrived later than the configured threshold.
+        data_tests: [not_null]
+      - name: late_arrival_reason
+        description: Optional reason supplied for late arrival.
+      - name: batch_id
+        description: Batch that delivered the observation.
+        data_tests: [not_null]
+      - name: schema_version
+        description: Ecommerce customer source schema version.
+        data_tests: [not_null]
+      - name: ecommerce_customer_id
+        description: Ecommerce-native customer identifier.
+        data_tests: [not_null]
+      - name: email_hash
+        description: Normalized email hash when available from the ecommerce source.
+      - name: first_name
+        description: Customer first name from the ecommerce source.
+      - name: last_name
+        description: Customer last name from the ecommerce source.
+      - name: city
+        description: Customer city when present in the source record.
+      - name: source_file
+        description: Landing file from which Snowflake loaded the record.
+        data_tests: [not_null]
+      - name: source_file_row
+        description: Row number within the landing file.
+        data_tests: [not_null]
+      - name: warehouse_loaded_at
+        description: Timestamp when Snowflake loaded the landing record.
+        data_tests: [not_null]
+
+  - name: stg_ecommerce_orders
+    description: Typed, source-shaped ecommerce order observations from LANDING.
+    columns:
+      - name: source_record_id
+        description: Source-native order record identifier.
+        data_tests: [not_null]
+      - name: source_system
+        description: Source system that produced the record.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['ecommerce']}
+      - name: source_entity
+        description: Source entity represented by the record.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['orders']}
+      - name: operation
+        description: Source change operation.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['insert', 'update', 'delete']}
+      - name: business_event_timestamp
+        description: Timestamp associated with the order event.
+        data_tests: [not_null]
+      - name: source_updated_at
+        description: Timestamp when the source record was updated.
+        data_tests: [not_null]
+      - name: ingestion_timestamp
+        description: Timestamp when the source observation entered ingestion.
+        data_tests: [not_null]
+      - name: late_arrival
+        description: Whether the observation arrived late.
+        data_tests: [not_null]
+      - name: late_arrival_reason
+        description: Optional reason supplied for late arrival.
+      - name: batch_id
+        description: Batch that delivered the observation.
+        data_tests: [not_null]
+      - name: schema_version
+        description: Ecommerce order source schema version.
+        data_tests: [not_null]
+      - name: ecommerce_customer_id
+        description: Ecommerce-native customer identifier associated with the order.
+        data_tests: [not_null]
+      - name: status
+        description: Source order status.
+        data_tests: [not_null]
+      - name: currency
+        description: Currency code for the order amount.
+        data_tests: [not_null]
+      - name: total_amount
+        description: Source order total amount.
+        data_tests: [not_null]
+      - name: source_file
+        description: Landing file from which Snowflake loaded the record.
+        data_tests: [not_null]
+      - name: source_file_row
+        description: Row number within the landing file.
+        data_tests: [not_null]
+      - name: warehouse_loaded_at
+        description: Timestamp when Snowflake loaded the landing record.
+        data_tests: [not_null]
+
+  - name: stg_ecommerce_order_items
+    description: Typed, source-shaped ecommerce order-item observations from LANDING.
+    columns:
+      - name: source_record_id
+        description: Source-native order-item record identifier.
+        data_tests: [not_null]
+      - name: source_system
+        description: Source system that produced the record.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['ecommerce']}
+      - name: source_entity
+        description: Source entity represented by the record.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['order_items']}
+      - name: operation
+        description: Source change operation.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['insert', 'update', 'delete']}
+      - name: business_event_timestamp
+        description: Timestamp associated with the order-item event.
+        data_tests: [not_null]
+      - name: source_updated_at
+        description: Timestamp when the source record was updated.
+        data_tests: [not_null]
+      - name: ingestion_timestamp
+        description: Timestamp when the source observation entered ingestion.
+        data_tests: [not_null]
+      - name: late_arrival
+        description: Whether the observation arrived late.
+        data_tests: [not_null]
+      - name: late_arrival_reason
+        description: Optional reason supplied for late arrival.
+      - name: batch_id
+        description: Batch that delivered the observation.
+        data_tests: [not_null]
+      - name: schema_version
+        description: Ecommerce order-item source schema version.
+        data_tests: [not_null]
+      - name: order_id
+        description: Ecommerce-native order identifier.
+        data_tests: [not_null]
+      - name: product_id
+        description: Source product identifier.
+        data_tests: [not_null]
+      - name: quantity
+        description: Quantity of the product in the order item.
+        data_tests: [not_null]
+      - name: unit_price
+        description: Unit price of the product in the source currency.
+        data_tests: [not_null]
+      - name: source_file
+        description: Landing file from which Snowflake loaded the record.
+        data_tests: [not_null]
+      - name: source_file_row
+        description: Row number within the landing file.
+        data_tests: [not_null]
+      - name: warehouse_loaded_at
+        description: Timestamp when Snowflake loaded the landing record.
+        data_tests: [not_null]
+
+  - name: stg_ecommerce_refunds
+    description: Typed, source-shaped ecommerce refund observations from LANDING.
+    columns:
+      - name: source_record_id
+        description: Source-native refund record identifier.
+        data_tests: [not_null]
+      - name: source_system
+        description: Source system that produced the record.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['ecommerce']}
+      - name: source_entity
+        description: Source entity represented by the record.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['refunds']}
+      - name: operation
+        description: Source change operation.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ['insert', 'update', 'delete']}
+      - name: business_event_timestamp
+        description: Timestamp associated with the refund event.
+        data_tests: [not_null]
+      - name: source_updated_at
+        description: Timestamp when the source record was updated.
+        data_tests: [not_null]
+      - name: ingestion_timestamp
+        description: Timestamp when the source observation entered ingestion.
+        data_tests: [not_null]
+      - name: late_arrival
+        description: Whether the observation arrived late.
+        data_tests: [not_null]
+      - name: late_arrival_reason
+        description: Optional reason supplied for late arrival.
+      - name: batch_id
+        description: Batch that delivered the observation.
+        data_tests: [not_null]
+      - name: schema_version
+        description: Ecommerce refund source schema version.
+        data_tests: [not_null]
+      - name: order_id
+        description: Ecommerce-native order identifier associated with the refund.
+        data_tests: [not_null]
+      - name: refund_amount
+        description: Amount refunded in the source currency.
+        data_tests: [not_null]
+      - name: currency
+        description: Currency code for the refund amount.
+        data_tests: [not_null]
+      - name: source_file
+        description: Landing file from which Snowflake loaded the record.
+        data_tests: [not_null]
+      - name: source_file_row
+        description: Row number within the landing file.
+        data_tests: [not_null]
+      - name: warehouse_loaded_at
+        description: Timestamp when Snowflake loaded the landing record.
+        data_tests: [not_null]
